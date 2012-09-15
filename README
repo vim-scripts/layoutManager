@@ -1,0 +1,46 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=4217
+
+LayoutManager.vim allows to create layouts composed of named tabs, templates and windows and to do operations on these tabs and windows. The main idea is that tabs and windows are given names, for example, a window named "menu" could contain a menu file, another window called "code" could contain the code file, another one named "output" could contain the compiler's output text etc. The goal was to have a multiple windows environment similar to an IDE environment with windows and tabs with names that do different things, and where content may be "sent" to specific windows using commands, links (utl), mappings and especially from other script files and project files etc.
+
+This plugin is to be used from other scripts. Here are some possible use cases:
+
+- To do anything that needs a multiple window/tab interface where the content changes dynamically
+- To use from the vimrc to build a custom window layout at startup.
+- To use to build a IDE like window layout from a project file and to have for example an output window where content of a compiled and executed program would be dynamically sent (see the example in comments at the end of the plugin where I started to do such a project file) or where there is a project file window where to select a file (using utl hyperlinks) and open the file in the code window.
+- As a helper script to build a window interface for another application, like a file browser, a search utility, a monitoring utility where content needs to be dynamically send to specific windows at runtime.
+- To do some sort of content management system or file/data browsing system if used with hyperlinks (utl plugin).
+- etc.
+
+I tried to use an object programming style in vimscript because I thought it was suitable for this type of application.
+
+Here is an example of utilisation of layoutManager.vim:
+
+" Create a new layout
+let myLayout1 = g:lmLayout.New('MyLayout1')
+
+" Add tabs to the layout. The templates are pre-defined in the plugin in the function g:lmTab.ApplyTemplate()
+call myLayout1.Tabs.Add(g:lmTab.New('MyTab1', 'MyTemplate1'))
+call myLayout1.Tabs.Add(g:lmTab.New('MyTab2', 'MyTemplate2'))
+
+" Send commands to some of the windows of MyTab1
+call myLayout1.Tabs.MyTab1.Windows.code.OpenFile($VIM . '/vimrc') " Show the vimrc file in the code window
+call myLayout1.Tabs.MyTab1.Windows.output.Write("this is the output window 1!", 3) " Write text in the output window
+call myLayout1.Tabs.MyTab1.Windows.files.ExecuteShell('dir c:&#039) " List a directory in the files window
+
+" Send commands to some of the windows of MyTab2
+call myLayout1.Tabs.MyTab2.Windows.menu.Write("this is the menu!", 3) " Write text in the menu window
+call myLayout1.Tabs.MyTab2.Windows.code2.Execute('e ' . $VIM . '/vimrc') " Show the vimrc file in the code2 window
+
+" Set focus to the code window in MyTab1
+call myLayout1.Tabs.MyTab1.Windows.code.SetFocus()
+
+Note that I didn't finish the examples or the documentation, but the plugin is working fine with these initial features. Feel free to propose any features or to send comments. And see the code itself for the possible methods that the objects have, the main methods have been used in this example (Write, Execute, ExecuteShell, SetFocus, but also, Resize, ResizeAll, IsFocused, Empty). You may also quickly save and restore the window sizes using the mappings <tab>f11 and <tab>f12.
+
+As another example, at the end of the plugin file I put in comments a project file (.vim) I am currently doing that will be using the layoutManager.vim plugin. It is not finished but you are free to look at it to see how to use the plugin. Here is how I use that project file for now: I source my project file, then the layout is created. One window contains the project file itself with hyperlinks to compile and run the program, other windows are code2 window, menu window etc. When I execute that compile and run links, the results of compile are added to quickfix window but the output of the run file is send to a window in the layout called "output". Like in visual studio there is the
+project window, output window, code window, menu window etc. I would like to create some kind of IDE-like interface and functionnality in
+vim. This plugin makes it possible now.
+
+Todo: 
+Remove tabs and windows from the containers, at the same time from the editor
+Ajouter une fonction pour aller directement a une fenetre style gt 1 gt 5 pour les tabs mais pour une fenetre.
+Add windows dynamically to already loaded layouts
