@@ -1,6 +1,42 @@
-" -------------------
-" LayoutManager
-" -------------------
+"===========================================
+" LayoutManager plugin
+"===========================================
+
+" Version 1.0.1
+
+" LayoutManager.vim allows to create layouts composed named of tabs and windows and do operations on these tabs and windows. The main idea is that tabs and windows are given names, for example, a window named "menu" could contain a menu file, another window called "code" could contain the code file, another one named "output" could contain the compiler's output text etc. The goal was to have a multiple windows environment similar to an IDE environment like visual studio for examples with windows and tabs with names that do different things, and were content may be "sent" to specific windows using commands, links (utl), mappings and especially from other script files and project files etc.
+" 
+" At the end of the plugin file I put in comments the example of a project file (.vim) I am currently doing that will be using the layoutManager.vim plugin. It is not finished but you are free to look at it to see how to use the plugin.
+" 
+" I tried to use an object programming style in vimscript because I thought it was suitable for this type of application.
+" 
+" Here is an example of utilisation of layoutManager.vim:
+" 
+" " Create a new layout
+" let myLayout1 = g:lmLayout.New('MyLayout1')
+" 
+" " Add tabs to the layout
+" call myLayout1.Tabs.Add(g:lmTab.New('MyTab1', 'MyTemplate1'))
+" call myLayout1.Tabs.Add(g:lmTab.New('MyTab2', 'MyTemplate2'))
+" 
+" " Send commands to some of the windows of MyTab1
+" call myLayout1.Tabs.MyTab1.Windows.code.Execute('e ' . $VIM . '/vimrc') " Show the vimrc file in the code window
+" call myLayout1.Tabs.MyTab1.Windows.output.Write("this is the output window 1!", 3) " Write text in the output window
+" call myLayout1.Tabs.MyTab1.Windows.files.ExecuteShell('dir c:') " List a directory in the files window
+" call myLayout1.Tabs.MyTab1.Windows.code.SetFocus()
+" 
+" " Send commands to some of the windows of MyTab2
+" call myLayout1.Tabs.MyTab2.Windows.menu.Write("this is the menu!", 3) " Write text in the menu window
+" call myLayout1.Tabs.MyTab2.Windows.code2.Execute('e ' . $VIM . '/vimrc') " Show the vimrc file in the code2 window
+" 
+" let myLayout2 = s:layout.New('MyLayout2')
+" 
+" " Set focus to MyTab1
+" call myLayout1.Tabs.MyTab1.SetFocus()
+" 
+" Note that I didn't finish the examples or the documentation, but the plugin is working fine with these initial features. Feel free to propose any features or to send comments.
+
+" See sample project file at the end of this file.
 
 " Todo: 
 " Remove tabs and windows from the containers, at the same time from the editor
@@ -422,30 +458,81 @@ nmap <tab><f12> :exe g:lmRestoreSizes<cr>
     endfunction
 
 "===========================================
-" Tests
+" Sample project file using the layoutManager.vim plugin
 "===========================================
 
-" ajouter un mapping pour resizer avec ResizeAll ou avec le winrestcmd() a ajouter?
-" ensuite faire un project file avec un layout, ajouter le project file dans le layout
-" faire une doc simple
-
-" Create a new layout
-"let myLayout1 = g:lmLayout.New('MyLayout1')
-
-" Add tabs to the layout
-"call myLayout1.Tabs.Add(g:lmTab.New('MyTab1', 'MyTemplate1'))
-"call myLayout1.Tabs.Add(g:lmTab.New('MyTab2', 'MyTemplate2'))
-
-" Send commands to some of the windows of MyTab1
-"call myLayout1.Tabs.MyTab1.Windows.code.Execute('e ' . $VIM . '/vimrc') " Show the vimrc file in the code window
-"call myLayout1.Tabs.MyTab1.Windows.output.Write("this is the output window 1!", 3) " Write text in the output window
-"call myLayout1.Tabs.MyTab1.Windows.files.ExecuteShell('dir c:\') " List a directory in the files window
-"call myLayout1.Tabs.MyTab1.Windows.code.SetFocus()
-
-" Send commands to some of the windows of MyTab2
-"call myLayout1.Tabs.MyTab2.Windows.menu.Write("this is the menu!", 3) " Write text in the menu window
-"call myLayout1.Tabs.MyTab2.Windows.code2.Execute('e ' . $VIM . '/vimrc') " Show the vimrc file in the code2 window
-
-"let myLayout2 = s:layout.New('MyLayout2')
-" Set focus to MyTab1
-"call myLayout1.Tabs.MyTab1.SetFocus()
+" call g:Layout()
+" 
+" " ------------------------------------------------------------------------
+" " Variables
+" " ------------------------------------------------------------------------
+" let g:prjName = 'ObjectBrowser'
+" let g:prjPath1 = 'i:\data\Projects\' . g:prjName . '\'
+" let g:prjPath2 = 'i:\\data\\Projects\\' . g:prjName . '\\'
+" let g:prjPath3 = 'i:/data/Projects/' . g:prjName . '/'
+" let g:cmpExe = 'c:\\Progra~1\\Mono-2.10.8\\bin\\mcs'
+" let g:cmpReferences = '/reference:System.Data.dll,System.Configuration.dll,System.Data.SQLite.dll' 
+" let g:runExe = 'c:\\Progra~1\\Mono-2.10.8\\bin\\mono.exe'
+" 
+" " ------------------------------------------------------------------------
+" " Commands
+" " ------------------------------------------------------------------------
+" 
+" " <url:vimscript:echo   'cs mono (compile)'       | call g:Compile()>
+" " <url:vimscript:echo   'cs mono (run)'           | call g:Run()>
+" " <url:vimscript:echo   'cs mono (compile+run)'   | call g:Compile() | call g:Run()>
+" " <url:vimscript:echo   'cs (copy app.config)'    | exe '!copy ' . g:dirPv . ' ' . g:prjPath2 . 'ObjectBrowser.exe.config'>
+" 
+" " Resize the windows
+" " <url:vimscript:call g:obLayout.Tabs.MyTab1.ResizeAll()>
+" 
+" " ------------------------------------------------------------------------
+" " Layout
+" " ------------------------------------------------------------------------
+" function! g:Layout()
+"     " MyTemplate1 (this template is defined in the layoutManager.vim plugin)
+"     " +-----+
+"     " |1|2|3| menu, code, project
+"     " |-----|
+"     " |4|5|6| output2, code2, files
+"     " |-----|
+"     " |  7  | output
+"     " +-----+
+" 
+"     " Create the layout objects
+"     let g:obLayout = g:lmLayout.New('MyLayout1') " Create the layout object
+"     call g:obLayout.Tabs.Add(g:lmTab.New('MyTab1', 'MyTemplate1')) " Add a tab to the layout object by specifying the template to use
+"     let windows = g:obLayout.Tabs.MyTab1.Windows " Get the windows from the tab objects
+" 
+"     " Update the windows with content
+"     call windows.menu.OpenFile(g:dirMenuPath)
+"     call windows.code.Execute('Mru')
+"     call windows.project.OpenFile(g:prjPath3 . 'Project.vim')
+" 
+"     call windows.output2.Write("This window could contain command output code from the menu file links for example.", 3)
+"     call windows.code2.Execute("call g:listBuffers('b!')")
+"     call windows.files.Execute("call g:dir('".g:prjPath3.g:prjName."')")
+" 
+"     call windows.output.Write("This window could contain output from console after the code is compiled and run by links in the project file or by vim mappings. It may contain other kind of output text like database output or any other command output.", 3)
+" 
+"     call windows.code.SetFocus() " Set focus to the code window
+" endfunction
+" 
+" " ------------------------------------------------------------------------
+" " Compile
+" " ------------------------------------------------------------------------
+" function! g:Compile()
+"     let l:cmd = g:cmpExe . ' /out:' . g:prjPath2 . g:prjName . 'exe ' . g:dirPv . ' > ' . g:prjPath2 . 'errors.txt'
+"     call g:obLayout.Tabs.MyTab1.Windows.output.ExecuteShell(l:cmd)
+"     "call g:obLayout.Tabs.MyTab1.Windows.output.Write(l:cmd, 0)
+"     "exe 'r! c:\\Progra~1\\Mono-2.10.8\\bin\\mcs /out:i:\\data\\Projects\\ObjectBrowser\\ObjectBrowser.exe I:\\data\\projects\\ObjectBrowser\\ObjectBrowser.cs > i:\\data\\Projects\\ObjectBrowser\\errors.txt'
+"     exe 'caddfile ' . g:prjPath3 . 'errors.txt'
+"     copen
+" endfunction
+" 
+" " ------------------------------------------------------------------------
+" " Run
+" " ------------------------------------------------------------------------
+" function! g:Run()
+"     call g:obLayout.Tabs.MyTab1.Windows.output.ExecuteShell(g:runExe . ' ' . g:prjPath2 . g:prjName)
+" endfunction
